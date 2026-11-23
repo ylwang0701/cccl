@@ -23,3 +23,9 @@
 #include "checkers/vformat_to.h"
 
 #include "tests/tuple.h"
+
+int main(int, char**)
+{
+  test();
+  return 0;
+}
