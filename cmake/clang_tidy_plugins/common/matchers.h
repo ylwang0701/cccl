@@ -32,15 +32,15 @@ AST_MATCHER_FUNCTION(file_matching_type, isExpansionInTestOrExampleFile)
   return isExpansionInFileMatching(".*/(test|c2h|examples)/.*");
 }
 
-AST_MATCHER_FUNCTION(DeclarationMatcher, isInNamespaceCudaStd)
+template <class MatcherT>
+[[nodiscard]] DeclarationMatcher namespaceMatches(StringRef regex, const MatcherT& InnerMatcher)
 {
-  // Require a namespace boundary so cuda::std_extra does not match.
-  return hasDeclContext(namespaceDecl(matchesName("^::cuda::std($|::)")));
+  return namespaceDecl(matchesName(regex), InnerMatcher);
 }
 
-AST_MATCHER_FUNCTION(DeclarationMatcher, isInNamespaceCub)
+template <class MatcherT>
+[[nodiscard]] DeclarationMatcher namespaceCudaStd(const MatcherT& InnerMatcher)
 {
-  // Require a namespace boundary so cub_extra does not match.
-  return hasDeclContext(namespaceDecl(matchesName("^::cub($|::)")));
+  return namespaceMatches("^::cuda::std($|::)", InnerMatcher);
 }
 } // namespace clang::tidy::cccl::util
