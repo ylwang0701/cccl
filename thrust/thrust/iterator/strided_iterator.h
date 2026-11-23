@@ -18,11 +18,10 @@
 #include <thrust/iterator/iterator_traits.h>
 #include <thrust/iterator/iterator_traversal_tags.h>
 
+#include <cuda/__iterator/is_synthesizing_iterator.h>
 #include <cuda/std/__iterator/concepts.h>
 #include <cuda/std/__type_traits/is_convertible.h>
 #include <cuda/std/__type_traits/is_same.h>
-
-#include <cuda/__iterator/is_synthesizing_iterator.h>
 
 THRUST_NAMESPACE_BEGIN
 
