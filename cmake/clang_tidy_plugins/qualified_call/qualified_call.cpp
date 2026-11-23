@@ -296,6 +296,16 @@ public:
 
     if (const auto* const ns = heuristicResolveNamespace(expr, *result.Context))
     {
+      // TODO (jfaibussowit):
+      //
+      // Would love to suggest a fixit here, but this is... extraordinarily complicated. We are
+      // already almost certainly dealing with pseudo ADL (from the same namespace, but still),
+      // and it is made even more complex by the various edge cases we'd need to handle. For
+      // example, when the call is in a child namespace, or in a sibling namespace. Or if the
+      // call is actually in another namespace but through static members. Or, if the call is
+      // through an alias namespace (for example cuda::std::views!).
+      //
+      // It's a nightmare.
       d << (diag(expr->getBeginLoc(), "Call appears to originate from namespace '%0'", DiagnosticIDs::Level::Note)
             << util::fully_qualified_name(*ns));
     }
