@@ -6,6 +6,7 @@
 #include <clang-tidy/ClangTidyCheck.h>
 #include <clang-tidy/ClangTidyModule.h>
 #include <clang/ASTMatchers/ASTMatchers.h>
+#include <common/matchers.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/ErrorHandling.h>
 
@@ -241,8 +242,8 @@ public:
         .bind(CALL_BIND);
 
     finder->addMatcher(
-      namespaceDecl(
-        matchesName("^::(cub|cuda)($|::)"),
+      util::namespaceMatches(
+        "^::(cub|cuda)($|::)",
         // Bind the normalized namespace before evaluating descendants.
         ignoringInlineNamespaces(namespaceDecl().bind(NS_BIND)),
         forEach(decl(

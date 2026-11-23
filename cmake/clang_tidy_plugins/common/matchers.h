@@ -32,10 +32,10 @@ AST_MATCHER_FUNCTION(file_matching_type, isExpansionInTestOrExampleFile)
   return isExpansionInFileMatching(".*/(test|c2h|examples)/.*");
 }
 
-template <class MatcherT>
-[[nodiscard]] DeclarationMatcher namespaceMatches(StringRef regex, const MatcherT& InnerMatcher)
+template <class... MatcherT>
+[[nodiscard]] DeclarationMatcher namespaceMatches(StringRef regex, const MatcherT&... inner)
 {
-  return namespaceDecl(matchesName(regex), InnerMatcher);
+  return namespaceDecl(matchesName(regex), inner...);
 }
 
 template <class MatcherT>
