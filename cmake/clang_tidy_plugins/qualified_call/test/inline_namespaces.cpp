@@ -7,6 +7,7 @@
 // CLANG_TIDY_CONFIG_END
 
 // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+// CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 
 namespace other_ns
 {
@@ -42,7 +43,17 @@ void nested_inline()
   inline_template<int>::call();
   other_ns::external::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 }
 }
@@ -66,10 +77,30 @@ void ordinary_boundary()
 {
   inline_type::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   outer_type::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 inline namespace detail_abi
 {
@@ -77,7 +108,17 @@ void boundary_below_inline()
 {
   inline_type::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 }
 }
@@ -114,7 +155,17 @@ void operations()
   inline_type::call();
   other_ns::external::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 }
 void operations()
@@ -125,6 +176,6 @@ void operations()
 }
 }
 
-// CHECK-FIXES: DiagnosticName: cccl-qualified-call
+// CHECK-FIXES-NOT: DiagnosticName:
 
 // clang-format on

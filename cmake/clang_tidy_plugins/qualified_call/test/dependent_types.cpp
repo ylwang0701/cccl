@@ -7,6 +7,7 @@
 // CLANG_TIDY_CONFIG_END
 
 // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+// CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 
 namespace other_ns
 {
@@ -78,19 +79,57 @@ void external_specializations()
 {
   other_ns::external<T>::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   other_ns::external<T>::template rebind<int>::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   other_ns::external<typename T::nested_type>::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   other_ns::external<typename T::nested_type>::template rebind<int>::nested_type::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   other_ns::external<local<T>>::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   ::other_ns::external<T>::call();
   ::other_ns::external<T>::template rebind<int>::call();
 }
@@ -103,11 +142,25 @@ void aliases()
 {
   external_alias<T>::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   using external_nested = typename other_ns::external<T>::template rebind<int>::nested_type;
   external_nested::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 template <>
@@ -119,7 +172,11 @@ void inherited_templates()
 {
   local<int>::template rebind<T>::call();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 template <template <class> class Container, class T>
@@ -138,7 +195,17 @@ void function()
 {
   target();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 template <class T>
@@ -148,14 +215,34 @@ struct wrapper
   {
     target();
     // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+    // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+    // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+    // CHECK-FIXES: FileOffset: [[#CALL:]]
+    // CHECK-FIXES: Replacements: []
+    // CHECK-FIXES: Notes:
+    // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+    // CHECK-FIXES: FileOffset: [[#CALL]]
+    // CHECK-FIXES: Replacements: []
+    // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
     // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+    // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   }
 
   static void static_member()
   {
     target();
     // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+    // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+    // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+    // CHECK-FIXES: FileOffset: [[#CALL:]]
+    // CHECK-FIXES: Replacements: []
+    // CHECK-FIXES: Notes:
+    // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+    // CHECK-FIXES: FileOffset: [[#CALL]]
+    // CHECK-FIXES: Replacements: []
+    // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
     // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+    // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   }
 };
 
@@ -164,7 +251,17 @@ void function<char>()
 {
   target();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 template <class T>
@@ -174,7 +271,17 @@ struct wrapper<T*>
   {
     target();
     // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+    // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+    // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+    // CHECK-FIXES: FileOffset: [[#CALL:]]
+    // CHECK-FIXES: Replacements: []
+    // CHECK-FIXES: Notes:
+    // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+    // CHECK-FIXES: FileOffset: [[#CALL]]
+    // CHECK-FIXES: Replacements: []
+    // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
     // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+    // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   }
 };
 
@@ -193,6 +300,6 @@ void instantiate(wrapper<int>& integer, wrapper<double>& floating, wrapper<int*>
 template void function<long>();
 }
 
-// CHECK-FIXES: DiagnosticName: cccl-qualified-call
+// CHECK-FIXES-NOT: DiagnosticName:
 
 // clang-format on

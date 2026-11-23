@@ -7,6 +7,7 @@
 // CLANG_TIDY_CONFIG_END
 
 // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+// CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 
 namespace other_ns
 {
@@ -25,13 +26,43 @@ void ordinary_calls()
 {
   local(0);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   overloaded(0);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   other_ns::call(0);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   ::cub::local(0);
   ::other_ns::call(0);
 }
@@ -41,7 +72,17 @@ void using_declaration()
   using ::other_ns::call;
   call(0);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 void using_directive()
@@ -49,7 +90,17 @@ void using_directive()
   using namespace other_ns;
   call(0);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 namespace relative_alias = ::other_ns;
@@ -57,7 +108,17 @@ void namespace_alias()
 {
   relative_alias::call(0);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   ::cub::relative_alias::call(0);
 }
 
@@ -66,10 +127,30 @@ void templates(T value)
 {
   other_ns::generic<T>(value);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   other_ns::generic(value);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   ::other_ns::generic<T>(value);
   ::other_ns::generic(value);
 }
@@ -78,7 +159,17 @@ int recursive(int value)
 {
   return value ? recursive(value - 1) : 0;
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 }
 
@@ -99,7 +190,17 @@ void shadowed_namespace()
 {
   shadow_ns::call(0);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub::shadow_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub::shadow_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   ::shadow_ns::call(0);
   ::cub::shadow_ns::call(0);
 }
@@ -118,13 +219,43 @@ void parentheses()
 {
   (target)();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   ((target))();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   (other_ns::target)();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   (::cub::target)();
   ((::other_ns::target))();
 }
@@ -150,7 +281,17 @@ void adl_selects_external_function(other_ns::argument value)
 {
   pick(value);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   ::other_ns::pick(value);
 }
 
@@ -159,14 +300,34 @@ int dependent_adl(T value)
 {
   return pick(value);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 void hidden_friend(other_ns::hidden value)
 {
   hidden_pick(value);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 void imported_function(other_ns::argument value)
@@ -174,7 +335,17 @@ void imported_function(other_ns::argument value)
   using ::other_ns::pick;
   pick(value);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 template <class T>
@@ -182,7 +353,11 @@ int unresolved_name(T value)
 {
   return unknown_function(value);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 // Parentheses disable ADL but leave ordinary unqualified lookup exposed.
@@ -190,10 +365,20 @@ void parenthesized_lookup()
 {
   (pick)(0);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 }
 
-// CHECK-FIXES: DiagnosticName: cccl-qualified-call
+// CHECK-FIXES-NOT: DiagnosticName:
 
 // clang-format on

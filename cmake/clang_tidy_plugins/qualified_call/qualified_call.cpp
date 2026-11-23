@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <optional>
+#include <string>
 
 #include <clang-tidy/ClangTidyCheck.h>
 #include <clang-tidy/ClangTidyModule.h>
+#include <clang/AST/QualTypeNames.h>
 #include <clang/ASTMatchers/ASTMatchers.h>
-#include <clang/Lex/Lexer.h>
 #include <clang/Sema/HeuristicResolver.h>
 #include <common/matchers.h>
 #include <common/type_traits.h>
 #include <llvm/ADT/StringRef.h>
-#include <llvm/Support/ErrorHandling.h>
+#include <llvm/ADT/TypeSwitch.h>
 
 namespace clang::tidy::cccl
 {
@@ -125,24 +126,6 @@ AST_MATCHER_P( // NOLINT
   }
 
   return ns;
-}
-
-// ("foo::bar::baz", "baz::bop::asdasd")
-// -> "foo::bar::"
-//
-// ("foo::bar::baz", "bar::baz::bop")
-// -> "foo::"
-[[nodiscard]] StringRef chopMatchingOverlap(StringRef lhs, StringRef rhs)
-{
-  for (auto suffix = lhs; !suffix.empty(); suffix = suffix.split("::").second)
-  {
-    auto rest = rhs;
-    if (rest.consume_front(suffix) && (suffix.ends_with("::") || rest.empty() || rest.starts_with("::")))
-    {
-      return lhs.drop_back(suffix.size());
-    }
-  }
-  return lhs;
 }
 
 class QualifiedCallCheck final : public ClangTidyCheck
@@ -308,17 +291,13 @@ public:
   {
     const auto* const expr = result.Nodes.getNodeAs<CallExpr>(CALL_BIND);
 
-    auto d = diag(expr->getBeginLoc(), "Fully qualify all call expressions to avoid accidental ADL.");
+    auto d = diag(expr->getBeginLoc(), "Fully qualify all call expressions to avoid accidental ADL.")
+          << expr->getCallee()->getSourceRange();
 
     if (const auto* const ns = heuristicResolveNamespace(expr, *result.Context))
     {
-      const auto* const callee = expr->getCallee()->IgnoreParenImpCasts();
-      const auto prefix        = ("::" + util::fully_qualified_name(*ns) + "::").str();
-      const auto spelling      = Lexer::getSourceText(
-        CharSourceRange::getTokenRange(callee->getSourceRange()), *result.SourceManager, getLangOpts());
-      const auto repl = chopMatchingOverlap(prefix, spelling);
-
-      d << FixItHint::CreateInsertion(callee->getBeginLoc(), repl);
+      d << (diag(expr->getBeginLoc(), "Call appears to originate from namespace '%0'", DiagnosticIDs::Level::Note)
+            << util::fully_qualified_name(*ns));
     }
   }
 };

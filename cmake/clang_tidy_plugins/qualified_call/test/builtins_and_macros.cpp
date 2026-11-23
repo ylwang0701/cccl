@@ -7,6 +7,7 @@
 // CLANG_TIDY_CONFIG_END
 
 // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+// CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 
 namespace cub
 {
@@ -32,7 +33,17 @@ void ordinary_function_with_builtin_prefix()
 {
   __builtin_user_function();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   ::cub::__builtin_user_function();
 }
 
@@ -40,7 +51,17 @@ void builtin_argument()
 {
   (void) __builtin_expect(value(), 1);
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'cub'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''cub'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   (void) __builtin_expect(::cub::value(), 1);
 }
 }
@@ -63,18 +84,40 @@ void macro_calls()
 {
   CALL_BARE();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   CALL_RELATIVE();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-MESSAGES: :[[@LINE-2]]:{{[0-9]+}}: note: Call appears to originate from namespace 'other_ns'
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: FileOffset: [[#CALL:]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES: Notes:
+  // CHECK-FIXES: Message: 'Call appears to originate from namespace ''other_ns'''
+  // CHECK-FIXES: FileOffset: [[#CALL]]
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   CALL_GLOBAL();
   (void) EXPECT_TRUE(true);
   (void) EXPECT_TRUE(CALL_BARE());
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
   (void) FORWARD_EXPRESSION(target());
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 
 #define CALL_DEFINED_IN_LIBRARY() target()
@@ -93,10 +136,14 @@ void generated_namespace()
 {
   target();
   // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: {{.*}} [cccl-qualified-call]
+  // CHECK-FIXES-LABEL: - DiagnosticName: cccl-qualified-call
+  // CHECK-FIXES: Replacements: []
+  // CHECK-FIXES-NOT: Message: 'Call appears to originate from namespace
   // CHECK-MESSAGES-NOT: {{:[0-9]+:[0-9]+: warning:}}
+  // CHECK-MESSAGES-NOT: note: Call appears to originate from namespace
 }
 END_CUDA_STD
 
-// CHECK-FIXES: DiagnosticName: cccl-qualified-call
+// CHECK-FIXES-NOT: DiagnosticName:
 
 // clang-format on
