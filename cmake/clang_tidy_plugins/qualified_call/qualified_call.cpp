@@ -6,7 +6,10 @@
 #include <clang-tidy/ClangTidyCheck.h>
 #include <clang-tidy/ClangTidyModule.h>
 #include <clang/ASTMatchers/ASTMatchers.h>
+#include <clang/Lex/Lexer.h>
+#include <clang/Sema/HeuristicResolver.h>
 #include <common/matchers.h>
+#include <common/type_traits.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/ErrorHandling.h>
 
@@ -51,7 +54,8 @@ AST_MATCHER_P(NamespaceDecl, ignoringInlineNamespaces, DeclarationMatcher, Inner
 // but we want the namespace that the outer class was defined in.
 AST_MATCHER_P(NamedDecl, hasEnclosingNamespace, DeclarationMatcher, InnerMatcher) // NOLINT
 {
-  const auto* const ns = dyn_cast<NamespaceDecl>(getNonInlineNamespaceContext(Node.getDeclContext()));
+  const auto* const ns =
+    dyn_cast<NamespaceDecl>(getNonInlineNamespaceContext(Node.getUnderlyingDecl()->getDeclContext()));
 
   return ns && InnerMatcher.matches(*ns, Finder, Builder);
 }
@@ -95,10 +99,56 @@ AST_MATCHER_P( // NOLINT
   return qualifier && InnerMatcher.matches(qualifier, Finder, Builder);
 }
 
+[[nodiscard]] const NamespaceDecl* heuristicResolveNamespace(const CallExpr* expr, ASTContext& ctx)
+{
+  const auto declarations = HeuristicResolver{ctx}.resolveCalleeOfCallExpr(expr);
+  const NamespaceDecl* ns = nullptr;
+
+  // We don't know which overload a dependent call selects until we substitute its template
+  // arguments. But if ordinary lookup only finds declarations in one namespace, we can still
+  // use that namespace for the fixit. If it finds declarations in different namespaces, we
+  // can't pick one.
+  for (const auto* const decl : declarations)
+  {
+    const auto* const candidate =
+      dyn_cast<NamespaceDecl>(getNonInlineNamespaceContext(decl->getUnderlyingDecl()->getDeclContext()));
+
+    if (!candidate)
+    {
+      continue;
+    }
+    if (ns && !ns->Equals(candidate))
+    {
+      return nullptr;
+    }
+    ns = candidate;
+  }
+
+  return ns;
+}
+
+// ("foo::bar::baz", "baz::bop::asdasd")
+// -> "foo::bar::"
+//
+// ("foo::bar::baz", "bar::baz::bop")
+// -> "foo::"
+[[nodiscard]] StringRef chopMatchingOverlap(StringRef lhs, StringRef rhs)
+{
+  for (auto suffix = lhs; !suffix.empty(); suffix = suffix.split("::").second)
+  {
+    auto rest = rhs;
+    if (rest.consume_front(suffix) && (suffix.ends_with("::") || rest.empty() || rest.starts_with("::")))
+    {
+      return lhs.drop_back(suffix.size());
+    }
+  }
+  return lhs;
+}
+
 class QualifiedCallCheck final : public ClangTidyCheck
 {
   static constexpr StringRef CALL_BIND{""};
-  static constexpr StringRef NS_BIND{"n"};
+  static constexpr StringRef CALLER_NS_BIND{"c"};
 
 public:
   using ClangTidyCheck::ClangTidyCheck;
@@ -141,7 +191,8 @@ public:
 
     // 1. Match declarations whose immediate namespace equals the bound caller
     //    namespace. Compare namespace identity so reopened namespace blocks also match.
-    const auto sameNamespaceDecl = namedDecl(hasEnclosingNamespace(declaresSameEntityAsBoundNode(NS_BIND.str())));
+    const auto sameNamespaceDecl =
+      namedDecl(hasEnclosingNamespace(declaresSameEntityAsBoundNode(CALLER_NS_BIND.str())));
 
     // 2. Match a type qualifier whose underlying type belongs to that namespace or refers
     //    to a template parameter. Desugaring follows aliases to their underlying types.
@@ -245,7 +296,7 @@ public:
       util::namespaceMatches(
         "^::(cub|cuda)($|::)",
         // Bind the normalized namespace before evaluating descendants.
-        ignoringInlineNamespaces(namespaceDecl().bind(NS_BIND)),
+        ignoringInlineNamespaces(namespaceDecl().bind(CALLER_NS_BIND)),
         forEach(decl(
           // Need to avoid matching the namespaces above again
           unless(namespaceDecl()),
@@ -257,7 +308,18 @@ public:
   {
     const auto* const expr = result.Nodes.getNodeAs<CallExpr>(CALL_BIND);
 
-    diag(expr->getBeginLoc(), "Bad!") << expr->getSourceRange();
+    auto d = diag(expr->getBeginLoc(), "Fully qualify all call expressions to avoid accidental ADL.");
+
+    if (const auto* const ns = heuristicResolveNamespace(expr, *result.Context))
+    {
+      const auto* const callee = expr->getCallee()->IgnoreParenImpCasts();
+      const auto prefix        = ("::" + util::fully_qualified_name(*ns) + "::").str();
+      const auto spelling      = Lexer::getSourceText(
+        CharSourceRange::getTokenRange(callee->getSourceRange()), *result.SourceManager, getLangOpts());
+      const auto repl = chopMatchingOverlap(prefix, spelling);
+
+      d << FixItHint::CreateInsertion(callee->getBeginLoc(), repl);
+    }
   }
 };
 
